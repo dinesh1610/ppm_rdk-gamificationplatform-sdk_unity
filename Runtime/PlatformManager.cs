@@ -29,8 +29,8 @@ namespace GamificationBackend
 
         private void Awake()
         {
-            instance = this;
-            if (instance != this)
+            Instance = this;
+            if (Instance != this)
             {
                 Debug.LogWarning("Attempted to overwrite PlatformManager singleton." +
                                  " Destroying offender");
