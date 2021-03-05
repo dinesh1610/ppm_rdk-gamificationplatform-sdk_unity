@@ -1,6 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using Microsoft.Win32.SafeHandles;
 using UnityEngine;
 
 namespace GamificationBackend
@@ -8,8 +11,15 @@ namespace GamificationBackend
     /// <summary>
     /// A typical manager behaviour, which lets a game interface with the gamification backend.
     /// </summary>
-    public class PlatformManager : MonoBehaviour
+    public partial class PlatformManager : MonoBehaviour
     {
+        [SerializeField]
+        private string gameToken;
+        [SerializeField]
+        private string host;
+        
+        #region private
+        
         private static PlatformManager instance;
         public static PlatformManager Instance
         {
@@ -27,6 +37,8 @@ namespace GamificationBackend
         private PlatformApi api;
         private PlaySession session;
 
+        public PlaySession Session => session;
+
         private void Awake()
         {
             Instance = this;
@@ -38,9 +50,11 @@ namespace GamificationBackend
             }
             else
             {
-                api = new PlatformApi();
+                api = new PlatformApi(host, gameToken);
             }
         }
+        
+        #endregion
 
         /// <summary>
         /// Authenticates with the backend and internally stores reference to the session,
@@ -51,9 +65,9 @@ namespace GamificationBackend
         /// <param name="pin2">Second PIN for authentication</param>
         /// <param name="callback">Callback accepting the produced session</param>
         /// <returns></returns>
-        public IEnumerator AuthenticateAndGetSession(int pin1, int pin2, Action<PlaySession> callback)
+        public IEnumerator AuthenticateAndGetSession(string phone, string password, Action<PlaySession> callback)
         {
-            return api.BuildSession($"{pin1}-{pin2}", (PlaySession sessionResult) =>
+            yield return api.BuildSession(phone, password, (PlaySession sessionResult) =>
             {
                 session = sessionResult;
                 callback(session);
@@ -68,88 +82,28 @@ namespace GamificationBackend
         /// <returns></returns>
         public IEnumerator SetCompletionStatus(CompletionStatus status, Action<bool> callback)
         {
-            return api.PostData(session, "status", status, callback);
+            if (session == null)
+            {
+                Debug.LogWarning("Play session has not been built. Ignoring request");
+                yield break;
+            }
+            yield return api.UpdateActivityStatus(session, CompletionStatusToInt(status), callback);
+            yield return null;
         }
 
-        /// <summary>
-        /// Set any data on the session, which will show up in the table on the backend
-        /// </summary>
-        /// <param name="path"></param>
-        /// <param name="values"></param>
-        /// <param name="callback"></param>
-        /// <returns></returns>
-        public IEnumerator SetMetaData<T>(string path, List<DataPoint<T>> values, Action<bool> callback)
+        private int CompletionStatusToInt(CompletionStatus status)
         {
-            // TODO format the datapoints into something the API understands
-            return api.PostData(session, path, "random string for now", callback);
+            switch (status)
+            {
+                case CompletionStatus.ENROLLED:
+                    return 10;
+                case CompletionStatus.STARTED:
+                    return 20;
+                case CompletionStatus.COMPLETED:
+                    return 30;
+            }
+
+            return 0;
         }
-
-        class PlatformApi
-        {
-            public IEnumerator BuildSession(string auth, Action<PlaySession> callback)
-            {
-                // TODO
-                yield return new WaitForSeconds(1f);
-                callback(new PlaySession(auth, "123123", true));  // TODO
-            }
-
-            public IEnumerator PostData(PlaySession session, string path, int value, Action<bool> callback)
-            {
-                // TODO
-                yield return new WaitForSeconds(1f);
-                callback(true);
-            }
-            
-            public IEnumerator PostData(PlaySession session, string path, string value, Action<bool> callback)
-            {
-                // TODO
-                yield return new WaitForSeconds(1f);
-                callback(true);
-            }
-            
-            public IEnumerator PostData(PlaySession session, string path, CompletionStatus value, Action<bool> callback)
-            {
-                // TODO
-                yield return new WaitForSeconds(1f);
-                callback(true);
-            }
-        }
-    }
-
-    /// <summary>
-    /// An instance describing the authenticated session. Inpect the IsValid property to learn
-    /// whether it has authenticated correctly
-    /// </summary>
-    public class PlaySession
-    {
-        private string auth;
-        private string key;
-        private bool isValid;
-
-        public bool IsValid => isValid;
-
-        public PlaySession(string auth, string key, bool isValid)
-        {
-            this.auth = auth;
-            this.key = key;
-            this.isValid = isValid;
-        }
-        
-    }
-
-    [Serializable]
-    public class DataPoint<T>
-    {
-        // TODO
-        public string name;
-        public T value;
-
-    }
-
-    public enum CompletionStatus
-    {
-        INITIAL,
-        COMPLETED,
-        FAILED
     }
 }
