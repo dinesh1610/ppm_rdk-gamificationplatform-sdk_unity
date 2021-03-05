@@ -55,6 +55,23 @@ namespace GamificationBackend
         }
         
         #endregion
+        
+        /// <summary>
+        /// Registers a new player on the platform for the current game
+        /// </summary>
+        /// <param name="firstName"></param>
+        /// <param name="lastName"></param>
+        /// <param name="company"></param>
+        /// <param name="phone"></param>
+        /// <param name="password"></param>
+        /// <param name="callback">A callback action receiving a bool signifying whether the player was registered
+        /// successfully</param>
+        /// <returns></returns>
+        public IEnumerator RegisterPlayer(string firstName, string lastName, string company, string phone, 
+            string password, Action<bool> callback)
+        {
+            yield return api.RegisterPlayer(firstName, lastName, company, phone, password, callback);
+        }
 
         /// <summary>
         /// Authenticates with the backend and internally stores reference to the session,

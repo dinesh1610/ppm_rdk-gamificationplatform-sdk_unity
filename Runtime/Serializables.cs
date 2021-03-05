@@ -52,6 +52,27 @@ namespace GamificationBackend
         public string last_modified;
     }
 
+    [Serializable]
+    public class PayloadRegisterPlayer
+    {
+        public string first_name;
+        public string last_name;
+        public string company;
+        public string phone;
+        public string password;
+        public string game_token;
+    }
+
+    [Serializable]
+    public class PayloadPlayer
+    {
+        public int id;
+        public string email;
+        public string first_name;
+        public string last_name;
+        public string full_name;
+    }
+
     public enum CompletionStatus
     {
         ENROLLED,

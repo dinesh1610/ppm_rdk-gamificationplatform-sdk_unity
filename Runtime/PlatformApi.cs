@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.ComponentModel;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -14,6 +15,7 @@ namespace GamificationBackend
             private readonly string _authURL;
             private readonly string _identifyURL;
             private readonly string _activityURL;
+            private readonly string _registerURL;
             
             private string _personalToken;
             
@@ -23,6 +25,7 @@ namespace GamificationBackend
                 _authURL = $"{host}/gamification/api/auth/";
                 _identifyURL = $"{host}/gamification/api/game/identify/";
                 _activityURL = $"{host}/gamification/api/game/<game_id>/activity/<campaign_id>/";
+                _registerURL = $"{host}/gamification/api/register/";
             }
             
             #region API calls
@@ -78,6 +81,23 @@ namespace GamificationBackend
                 var activityResponse = (PayloadActivityDetail) responseCache;
                 session.status = activityResponse.status;
                 callback(activityResponse.status == status);
+            }
+
+            public IEnumerator RegisterPlayer(string firstName, string lastName,
+                string company, string phone, string password, Action<bool> callback)
+            {
+                var payload = new PayloadRegisterPlayer
+                {
+                    game_token = _gameToken,
+                    first_name = firstName,
+                    last_name = lastName,
+                    company = company,
+                    phone = phone,
+                    password = password
+                };
+                yield return PostData<PayloadRegisterPlayer, PayloadPlayer>(_registerURL, payload);
+                var playerRegistrationResponse = (PayloadPlayer) responseCache;
+                callback(playerRegistrationResponse.id > 0);
             }
             
             #endregion
