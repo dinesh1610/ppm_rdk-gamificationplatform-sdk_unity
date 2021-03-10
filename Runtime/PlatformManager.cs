@@ -68,7 +68,7 @@ namespace GamificationBackend
         /// successfully</param>
         /// <returns></returns>
         public IEnumerator RegisterPlayer(string firstName, string lastName, string company, string phone, 
-            string password, Action<bool> callback)
+            string password, Action<PlatformResponse<bool>> callback)
         {
             yield return api.RegisterPlayer(firstName, lastName, company, phone, password, callback);
         }
@@ -82,12 +82,12 @@ namespace GamificationBackend
         /// <param name="pin2">Second PIN for authentication</param>
         /// <param name="callback">Callback accepting the produced session</param>
         /// <returns></returns>
-        public IEnumerator AuthenticateAndGetSession(string phone, string password, Action<PlaySession> callback)
+        public IEnumerator AuthenticateAndGetSession(string phone, string password, Action<PlatformResponse<PlaySession>> callback)
         {
-            yield return api.BuildSession(phone, password, (PlaySession sessionResult) =>
+            yield return api.BuildSession(phone, password, sessionResult =>
             {
-                session = sessionResult;
-                callback(session);
+                session = sessionResult.content;
+                callback(sessionResult);
             });
         }
 
@@ -97,7 +97,7 @@ namespace GamificationBackend
         /// <param name="status">The status to set for the session</param>
         /// <param name="callback">Callback accepting a bool, which signifies the success of the call</param>
         /// <returns></returns>
-        public IEnumerator SetCompletionStatus(CompletionStatus status, Action<bool> callback)
+        public IEnumerator SetCompletionStatus(CompletionStatus status, Action<PlatformResponse<bool>> callback)
         {
             if (session == null)
             {
@@ -105,7 +105,6 @@ namespace GamificationBackend
                 yield break;
             }
             yield return api.UpdateActivityStatus(session, CompletionStatusToInt(status), callback);
-            yield return null;
         }
 
         private int CompletionStatusToInt(CompletionStatus status)
