@@ -109,6 +109,7 @@ namespace GamificationBackend
                 yield return GetData<PayloadActivityDetail>(url);
                 var activityResponse = (PlatformResponse<PayloadActivityDetail>) responseCache;
                 session.status = activityResponse.content.status;
+                callback(activityResponse);
             }
 
             public IEnumerator UpdateActivityStatus(PlaySession session, int status, Action<PlatformResponse<bool>> callback)
