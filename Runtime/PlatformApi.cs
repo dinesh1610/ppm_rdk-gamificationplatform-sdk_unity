@@ -100,6 +100,17 @@ namespace GamificationBackend
                 });
             }
 
+            public IEnumerator GetActivityStatus(PlaySession session, Action<PlatformResponse<PayloadActivityDetail>> callback)
+            {
+                var url = _activityURL
+                    .Replace("<game_id>", session.gameID.ToString())
+                    .Replace("<campaign_id>", session.campaignID.ToString());
+                
+                yield return GetData<PayloadActivityDetail>(url);
+                var activityResponse = (PlatformResponse<PayloadActivityDetail>) responseCache;
+                session.status = activityResponse.content.status;
+            }
+
             public IEnumerator UpdateActivityStatus(PlaySession session, int status, Action<PlatformResponse<bool>> callback)
             {
                 var url = _activityURL

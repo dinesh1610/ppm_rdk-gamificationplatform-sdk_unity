@@ -55,6 +55,9 @@ namespace GamificationBackend
         }
         
         #endregion
+
+        #region Public methods
+
         
         /// <summary>
         /// Registers a new player on the platform for the current game
@@ -106,6 +109,16 @@ namespace GamificationBackend
             }
             yield return api.UpdateActivityStatus(session, CompletionStatusToInt(status), callback);
         }
+        
+        public IEnumerator GetCompletionStatus(Action<PlatformResponse<PayloadActivityDetail>> callback)
+        {
+            if (session == null)
+            {
+                Debug.LogWarning("Play session has not been built. Ignoring request");
+                yield break;
+            }
+            yield return api.GetActivityStatus(session, callback);
+        }
 
         private int CompletionStatusToInt(CompletionStatus status)
         {
@@ -121,5 +134,7 @@ namespace GamificationBackend
 
             return 0;
         }
+
+        #endregion
     }
 }
