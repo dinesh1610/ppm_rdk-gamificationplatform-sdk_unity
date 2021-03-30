@@ -135,7 +135,7 @@ namespace GamificationBackend
             yield return api.GetActivityStatus(session, callback);
         }
 
-        public IEnumerator SetCustomField<T>(string label, T value, UdfType type, Action<PlatformResponse<PayloadUdfValue<T>>> callback)
+        public IEnumerator SetCustomField<T>(string label, T value, UdfType type, Action<PlatformResponseMany<UdfValue>> callback)
         {
             if (session == null)
             {

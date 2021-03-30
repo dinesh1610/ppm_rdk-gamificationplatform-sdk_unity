@@ -1,5 +1,8 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using SimpleJSON;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -182,7 +185,7 @@ namespace GamificationBackend
                 });
             }
 
-            public IEnumerator SetUdfFieldValue<T>(PlaySession session, string name, T value, int udfType, Action<PlatformResponse<PayloadUdfValue<T>>> callback)
+            public IEnumerator SetUdfFieldValue<T>(PlaySession session, string name, T value, int udfType, Action<PlatformResponseMany<UdfValue>> callback)
             {
                 var url = _udfValueUrl
                     .Replace("<game_id>", session.gameID.ToString())
@@ -194,9 +197,23 @@ namespace GamificationBackend
                     type_id = udfType
                 };
                 
-                yield return PostData<PayloadSetUdfValue<T>, PayloadUdfValue<T>>(url, payload);
-                var udfValueResponse = (PlatformResponse<PayloadUdfValue<T>>) responseCache;
-                callback(udfValueResponse);
+                yield return PostData<PayloadSetUdfValue<T>, PayloadUdfValue>(url, payload, true);
+                var udfValueResponse = (PlatformResponseMany<PayloadUdfValue>) responseCache;
+
+                var response = new PlatformResponseMany<UdfValue>
+                {
+                    error = "",
+                    status = RequestStatus.SUCCESS,
+                    content = udfValueResponse.content.Select(x => new UdfValue
+                    {
+                        id = x.id,
+                        name = x.field_type.name,
+                        type_id = x.field_type.type_id,
+                        target_object_id = x.target_object_id,
+                        value = x.value
+                    }).ToList()
+                };
+                callback(response);
             }
             
             #endregion
@@ -217,9 +234,9 @@ namespace GamificationBackend
                 return result;
             }
             
-            private IEnumerator PostData<T1, T2>(string url, T1 payload)
+            private IEnumerator PostData<T1, T2>(string url, T1 payload, bool expectMany=false)
             where T1: IBaseSerializable
-            where T2 : IBaseSerializable
+            where T2 : IBaseSerializable, new()
             {
                 Debug.Log("PostData: Posting new request: " + url);
                 using (UnityWebRequest webRequest = UnityWebRequest.Put(url, JsonUtility.ToJson(payload)))
@@ -251,12 +268,32 @@ namespace GamificationBackend
                         Debug.Log("PostData: Request successful. Calling callback");
                         try
                         {
-                            responseCache = new PlatformResponse<T2>
+                            if (expectMany)
                             {
-                                status = RequestStatus.SUCCESS,
-                                error = "",
-                                content = Deserialize<T2>(webRequest.downloadHandler.text)
-                            };
+                                List<T2> list = new List<T2>();
+                                var N = JSON.Parse("{\"results\":" + webRequest.downloadHandler.text + "}");
+                                for (int i = 0; i<N["results"].Count; i++)
+                                {
+                                    
+                                    list.Add((T2)new T2().Create(N["results"][i]));
+                                }
+
+                                responseCache = new PlatformResponseMany<T2>
+                                {
+                                    status = RequestStatus.SUCCESS,
+                                    error = "",
+                                    content = list
+                                };
+                            }
+                            else
+                            {
+                                responseCache = new PlatformResponse<T2>
+                                {
+                                    status = RequestStatus.SUCCESS,
+                                    error = "",
+                                    content = Deserialize<T2>(webRequest.downloadHandler.text)
+                                };
+                            }
                         }
                         catch (DeserializeException e)
                         {
@@ -346,11 +383,22 @@ namespace GamificationBackend
 
         public enum RequestStatus { ERROR, SUCCESS }
 
-        public class PlatformResponse<T>
+        interface IPlatformResponse
+        {
+            
+        }
+        public class PlatformResponse<T> : IPlatformResponse
         {
             public RequestStatus status;
             public string error = "";
             public T content;
+        }
+
+        public class PlatformResponseMany<T> : IPlatformResponse
+        {
+            public RequestStatus status;
+            public string error = "";
+            public List<T> content;
         }
     }
 }
