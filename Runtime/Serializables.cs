@@ -127,11 +127,65 @@ namespace GamificationBackend
         }
     }
 
+    [Serializable]
+    public class PayloadSetUdfValue<T> : IBaseSerializable
+    {
+        public string name;
+        public T value;
+        public int type_id;
+        
+        public bool check()
+        {
+            return !string.IsNullOrEmpty(name);
+        }
+    }
+
+    [Serializable]
+    public class PayloadUdfValue<T> : IBaseSerializable
+    {
+        // {"id":5005,"field_type":{"id":114,"name":"Game Score","type_id":20,"options":"","project":655},"value":7,"target_object_id":3}
+        public int id;
+        public UdfFieldType field_type;
+        public T value;
+        public int target_object_id;
+        
+        public bool check()
+        {
+            return id != 0;
+        }
+
+        public override string ToString()
+        {
+            return $"{id}::{field_type.name}::{value}::{field_type.type_id}";
+        }
+    }
+
+    [Serializable]
+    public class UdfFieldType
+    {
+        public int id;
+        public string name;
+        public int type_id;
+    }
+    
+
     public enum CompletionStatus
     {
         ENROLLED,
         STARTED,
         COMPLETED
+    }
+
+    public enum UdfType
+    {
+        TEXT_TYPE,
+        NUMBER_TYPE,
+        TEXT_LIST_TYPE,
+        NUMBER_LIST_TYPE,
+        DATE_TYPE,
+        DATE_LIST_TYPE,
+        LINK_TYPE,
+        LINK_LIST_TYPE
     }
     
 }
