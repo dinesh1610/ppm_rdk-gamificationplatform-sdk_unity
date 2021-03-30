@@ -1,13 +1,18 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using SimpleJSON;
 using UnityEngine;
 
 namespace GamificationBackend
 {
     class DeserializeException : ArgumentException {}
 
-    interface IBaseSerializable
+    public interface IBaseSerializable
     {
         bool check();
+
+        IBaseSerializable Create(JSONNode data);
     }
     
     /// <summary>
@@ -28,6 +33,11 @@ namespace GamificationBackend
         {
             return player != 0;
         }
+
+        public IBaseSerializable Create(JSONNode data)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     [Serializable]
@@ -41,6 +51,11 @@ namespace GamificationBackend
         {
             return !string.IsNullOrEmpty(phone);
         }
+
+        public IBaseSerializable Create(JSONNode data)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     [Serializable]
@@ -52,6 +67,11 @@ namespace GamificationBackend
         {
             return !string.IsNullOrEmpty(token);
         }
+
+        public IBaseSerializable Create(JSONNode data)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     [Serializable]
@@ -62,6 +82,11 @@ namespace GamificationBackend
         public bool check()
         {
             return !string.IsNullOrEmpty(game_token);
+        }
+
+        public IBaseSerializable Create(JSONNode data)
+        {
+            throw new NotImplementedException();
         }
     }
 
@@ -78,6 +103,11 @@ namespace GamificationBackend
         {
             return id != 0;
         }
+
+        public IBaseSerializable Create(JSONNode data)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     [Serializable]
@@ -92,6 +122,11 @@ namespace GamificationBackend
         public bool check()
         {
             return game != 0;
+        }
+
+        public IBaseSerializable Create(JSONNode data)
+        {
+            throw new NotImplementedException();
         }
     }
 
@@ -109,6 +144,11 @@ namespace GamificationBackend
         {
             return !string.IsNullOrEmpty(phone);
         }
+
+        public IBaseSerializable Create(JSONNode data)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     [Serializable]
@@ -125,8 +165,17 @@ namespace GamificationBackend
         {
             return id != 0;
         }
+
+        public IBaseSerializable Create(JSONNode data)
+        {
+            throw new NotImplementedException();
+        }
     }
 
+    /// <summary>
+    /// Data to send to API for setting values
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     [Serializable]
     public class PayloadSetUdfValue<T> : IBaseSerializable
     {
@@ -138,15 +187,24 @@ namespace GamificationBackend
         {
             return !string.IsNullOrEmpty(name);
         }
+
+        public IBaseSerializable Create(JSONNode data)
+        {
+            throw new NotImplementedException();
+        }
     }
 
+    /// <summary>
+    /// Data received from the API when setting values
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     [Serializable]
-    public class PayloadUdfValue<T> : IBaseSerializable
+    public class PayloadUdfValue : IBaseSerializable
     {
         // {"id":5005,"field_type":{"id":114,"name":"Game Score","type_id":20,"options":"","project":655},"value":7,"target_object_id":3}
         public int id;
         public UdfFieldType field_type;
-        public T value;
+        public string value;
         public int target_object_id;
         
         public bool check()
@@ -158,6 +216,22 @@ namespace GamificationBackend
         {
             return $"{id}::{field_type.name}::{value}::{field_type.type_id}";
         }
+
+        public IBaseSerializable Create(JSONNode data)
+        {
+            var result =  new PayloadUdfValue
+            {
+                id = data["id"],
+                field_type = new UdfFieldType
+                {
+                    name = data["field_type"]["name"],
+                    type_id = data["field_type"]["type_id"],
+                },
+                target_object_id = data["target_object_id"],
+                value = data["value"]
+            };
+            return result;
+        }
     }
 
     [Serializable]
@@ -167,7 +241,26 @@ namespace GamificationBackend
         public string name;
         public int type_id;
     }
-    
+
+    [Serializable]
+    public class UdfValue
+    {
+        public int id;
+        public string name;
+        public string value;
+        public int type_id;
+        public int target_object_id;
+        
+        public bool check()
+        {
+            return id != 0;
+        }
+
+        public override string ToString()
+        {
+            return $"{id}::{name}::{value}::{type_id}";
+        }
+    }
 
     public enum CompletionStatus
     {
