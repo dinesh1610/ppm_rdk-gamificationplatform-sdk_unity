@@ -53,6 +53,21 @@ namespace GamificationBackend
                 api = new PlatformApi(host, gameToken);
             }
         }
+
+        private int CompletionStatusToInt(CompletionStatus status)
+        {
+            switch (status)
+            {
+                case CompletionStatus.ENROLLED:
+                    return 10;
+                case CompletionStatus.STARTED:
+                    return 20;
+                case CompletionStatus.COMPLETED:
+                    return 30;
+            }
+
+            return 0;
+        }
         
         #endregion
 
@@ -120,19 +135,45 @@ namespace GamificationBackend
             yield return api.GetActivityStatus(session, callback);
         }
 
-        private int CompletionStatusToInt(CompletionStatus status)
+        public IEnumerator SetCustomField<T>(string label, T value, UdfType type, Action<PlatformResponse<PayloadUdfValue<T>>> callback)
         {
-            switch (status)
+            if (session == null)
             {
-                case CompletionStatus.ENROLLED:
-                    return 10;
-                case CompletionStatus.STARTED:
-                    return 20;
-                case CompletionStatus.COMPLETED:
-                    return 30;
+                Debug.LogWarning("Play session has not been built. Ignoring request");
+                yield break;
             }
-
-            return 0;
+        
+            int udfTypeInt = 0;
+        
+            switch (type)
+            {
+                case UdfType.TEXT_TYPE:
+                    udfTypeInt = 10;
+                    break;
+                case UdfType.NUMBER_TYPE:
+                    udfTypeInt = 20;
+                    break;
+                case UdfType.TEXT_LIST_TYPE:
+                    udfTypeInt = 30;
+                    break;
+                case UdfType.NUMBER_LIST_TYPE:
+                    udfTypeInt = 40;
+                    break;
+                case UdfType.DATE_TYPE:
+                    udfTypeInt = 50;
+                    break;
+                case UdfType.DATE_LIST_TYPE:
+                    udfTypeInt = 60;
+                    break;
+                case UdfType.LINK_TYPE:
+                    udfTypeInt = 70;
+                    break;
+                case UdfType.LINK_LIST_TYPE:
+                    udfTypeInt = 80;
+                    break;
+            }
+        
+            yield return api.SetUdfFieldValue(session, label, value, udfTypeInt, callback);
         }
 
         #endregion

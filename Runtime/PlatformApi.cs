@@ -14,6 +14,7 @@ namespace GamificationBackend
             private readonly string _identifyURL;
             private readonly string _activityURL;
             private readonly string _registerURL;
+            private readonly string _udfValueUrl;
             
             private string _personalToken;
             
@@ -24,6 +25,7 @@ namespace GamificationBackend
                 _identifyURL = $"{host}/gamification/api/game/identify/";
                 _activityURL = $"{host}/gamification/api/game/<game_id>/activity/<campaign_id>/";
                 _registerURL = $"{host}/gamification/api/register/";
+                _udfValueUrl = $"{host}/gamification/api/game/<game_id>/custom-fields/<campaign_id>/";
             }
             
             #region API calls
@@ -178,6 +180,23 @@ namespace GamificationBackend
                     error = "",
                     status = RequestStatus.SUCCESS
                 });
+            }
+
+            public IEnumerator SetUdfFieldValue<T>(PlaySession session, string name, T value, int udfType, Action<PlatformResponse<PayloadUdfValue<T>>> callback)
+            {
+                var url = _udfValueUrl
+                    .Replace("<game_id>", session.gameID.ToString())
+                    .Replace("<campaign_id>", session.campaignID.ToString());
+                PayloadSetUdfValue<T> payload = new PayloadSetUdfValue<T>
+                {
+                    name = name,
+                    value = value,
+                    type_id = udfType
+                };
+                
+                yield return PostData<PayloadSetUdfValue<T>, PayloadUdfValue<T>>(url, payload);
+                var udfValueResponse = (PlatformResponse<PayloadUdfValue<T>>) responseCache;
+                callback(udfValueResponse);
             }
             
             #endregion
