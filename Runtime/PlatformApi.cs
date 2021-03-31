@@ -441,10 +441,9 @@ namespace GamificationBackend
                 yield return www.SendWebRequest();
 
                 //var stream = new MemoryStream(Encoding.UTF8.GetBytes(www.downloadHandler.text)).ToArray();
-                var stream = System.Convert.FromBase64String(www.downloadHandler.text);
                 responseCache = new AssetData
                 {
-                    byteData = stream,
+                    byteData = www.downloadHandler.data,
                     mimeType = www.GetResponseHeader("Content-Type")
                 };
             }
