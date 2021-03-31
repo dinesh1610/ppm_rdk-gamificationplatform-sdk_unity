@@ -34,7 +34,7 @@ namespace GamificationBackend
                 _activityURL = $"{host}/gamification/api/game/<game_id>/activity/<campaign_id>/";
                 _registerURL = $"{host}/gamification/api/register/";
                 _filesListURL = $"{host}/gamification/api/game/<game_id>/assets/<campaign_id>/";
-                _fileContentURL = $"{host}/gamification/api/game-assets/<pk>/content/";
+                _fileContentURL = $"{host}/gamification/api/game-asset/<pk>/content/";
                 _udfValueUrl = $"{host}/gamification/api/game/<game_id>/custom-fields/<campaign_id>/";
             }
             
@@ -203,14 +203,13 @@ namespace GamificationBackend
                 callback(filesResponse);
             }
 
-            public IEnumerator GetFileContent(PlaySession session, int assetId, Action<byte[]> callback)
+            public IEnumerator GetFileContent(PlaySession session, int assetId, Action<AssetData> callback)
             {
                 var url = _fileContentURL
                     .Replace("<pk>", assetId.ToString());
 
                 yield return GetFileData(url);
-                byte[] data = (byte[]) responseCache;
-                callback(data);
+                callback((AssetData)responseCache);
             }
 
             public IEnumerator SetUdfFieldValue<T>(PlaySession session, string name, T value, int udfType, Action<PlatformResponseMany<UdfValue>> callback)
@@ -442,9 +441,13 @@ namespace GamificationBackend
                 yield return www.SendWebRequest();
 
                 var stream = new MemoryStream(Encoding.UTF8.GetBytes(www.downloadHandler.text));
-                byte[] bytes = new byte[stream.Length];
+                byte[] bytes = stream.ToArray();
                 stream.Read(bytes, 0, (int)stream.Length);
-                responseCache = bytes;
+                responseCache = new AssetData
+                {
+                    byteData = bytes,
+                    mimeType = www.GetResponseHeader("Content-Type")
+                };
             }
             
             #endregion
@@ -468,6 +471,12 @@ namespace GamificationBackend
             public RequestStatus status;
             public string error = "";
             public List<T> content;
+        }
+
+        public class AssetData
+        {
+            public byte[] byteData;
+            public string mimeType;
         }
     }
 }

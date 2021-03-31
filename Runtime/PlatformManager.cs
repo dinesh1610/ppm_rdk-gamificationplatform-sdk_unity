@@ -145,7 +145,7 @@ namespace GamificationBackend
             yield return api.GetFilesList(session, callback);
         }
         
-        public IEnumerator GetFileContent(int assetId, Action<byte[]> callback)
+        public IEnumerator GetFileContent(int assetId, Action<AssetData> callback)
         {
             if (session == null)
             {
