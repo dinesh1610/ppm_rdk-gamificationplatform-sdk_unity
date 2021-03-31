@@ -135,7 +135,7 @@ namespace GamificationBackend
             yield return api.GetActivityStatus(session, callback);
         }
         
-        public IEnumerator GetFilesList(Action<PlatformResponseMany<PayloadFileDetail>> callback)
+        public IEnumerator GetFilesList(Action<PlatformResponseMany<GameAsset>> callback)
         {
             if (session == null)
             {
@@ -143,6 +143,16 @@ namespace GamificationBackend
                 yield break;
             }
             yield return api.GetFilesList(session, callback);
+        }
+        
+        public IEnumerator GetFileContent(int assetId, Action<byte[]> callback)
+        {
+            if (session == null)
+            {
+                Debug.LogWarning("Play session has not been built. Ignoring request");
+                yield break;
+            }
+            yield return api.GetFileContent(session, assetId, callback);
         }
 
         public IEnumerator SetCustomField<T>(string label, T value, UdfType type, Action<PlatformResponseMany<UdfValue>> callback)

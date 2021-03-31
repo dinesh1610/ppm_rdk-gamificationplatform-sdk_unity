@@ -173,7 +173,7 @@ namespace GamificationBackend
     }
 
     [Serializable]
-    public class PayloadFileDetail : IBaseSerializable
+    public class GameAsset : IBaseSerializable
     {
         public int id;
         public string slug;
@@ -195,7 +195,7 @@ namespace GamificationBackend
 
         public IBaseSerializable Create(JSONNode data)
         {
-            var result =  new PayloadFileDetail
+            var result =  new GameAsset
             {
                 id = data["id"],
                 slug = data["slug"],
