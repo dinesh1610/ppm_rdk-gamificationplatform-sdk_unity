@@ -17,6 +17,7 @@ namespace GamificationBackend
             private readonly string _identifyURL;
             private readonly string _activityURL;
             private readonly string _registerURL;
+            private readonly string _filesListURL;
             private readonly string _udfValueUrl;
             
             private string _personalToken;
@@ -28,6 +29,7 @@ namespace GamificationBackend
                 _identifyURL = $"{host}/gamification/api/game/identify/";
                 _activityURL = $"{host}/gamification/api/game/<game_id>/activity/<campaign_id>/";
                 _registerURL = $"{host}/gamification/api/register/";
+                _filesListURL = $"{host}/gamification/api/game/<game_id>/assets/<campaign_id>/";
                 _udfValueUrl = $"{host}/gamification/api/game/<game_id>/custom-fields/<campaign_id>/";
             }
             
@@ -185,6 +187,17 @@ namespace GamificationBackend
                 });
             }
 
+            public IEnumerator GetFilesList(PlaySession session, Action<PlatformResponseMany<PayloadFileDetail>> callback)
+            {
+                var url = _filesListURL
+                    .Replace("<game_id>", session.gameID.ToString())
+                    .Replace("<campaign_id>", session.campaignID.ToString());
+                
+                yield return GetData<PayloadFileDetail>(url, true);
+                var filesResponse = (PlatformResponseMany<PayloadFileDetail>) responseCache;
+                callback(filesResponse);
+            }
+
             public IEnumerator SetUdfFieldValue<T>(PlaySession session, string name, T value, int udfType, Action<PlatformResponseMany<UdfValue>> callback)
             {
                 var url = _udfValueUrl
@@ -317,8 +330,8 @@ namespace GamificationBackend
                 }
             }
             
-            private IEnumerator GetData<T2>(string url)
-            where T2 : IBaseSerializable
+            private IEnumerator GetData<T2>(string url, bool expectMany = false)
+            where T2 : IBaseSerializable, new()
             {
                 Debug.Log("PostData: Posting new request: " + url);
                 using (UnityWebRequest webRequest = UnityWebRequest.Get(url))
@@ -347,12 +360,32 @@ namespace GamificationBackend
                     {
                         try
                         {
-                            responseCache = new PlatformResponse<T2>
+                            if (expectMany)
                             {
-                                status = RequestStatus.SUCCESS,
-                                error = "",
-                                content = Deserialize<T2>(webRequest.downloadHandler.text)
-                            };
+                                List<T2> list = new List<T2>();
+                                var N = JSON.Parse("{\"results\":" + webRequest.downloadHandler.text + "}");
+                                for (int i = 0; i<N["results"].Count; i++)
+                                {
+                                    
+                                    list.Add((T2)new T2().Create(N["results"][i]));
+                                }
+
+                                responseCache = new PlatformResponseMany<T2>
+                                {
+                                    status = RequestStatus.SUCCESS,
+                                    error = "",
+                                    content = list
+                                };
+                            }
+                            else
+                            {
+                                responseCache = new PlatformResponse<T2>
+                                {
+                                    status = RequestStatus.SUCCESS,
+                                    error = "",
+                                    content = Deserialize<T2>(webRequest.downloadHandler.text)
+                                };
+                            }
                         }
                         catch (DeserializeException e)
                         {

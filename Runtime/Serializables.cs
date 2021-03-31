@@ -172,6 +172,43 @@ namespace GamificationBackend
         }
     }
 
+    [Serializable]
+    public class PayloadFileDetail : IBaseSerializable
+    {
+        public int id;
+        public string slug;
+        public int game;
+        public int campaign;
+        public int status;
+        public int asset_type;
+        public string file_name;
+        
+        public bool check()
+        {
+            return id != 0;
+        }
+
+        public override string ToString()
+        {
+            return $"{id}::{slug}::{game}::{campaign}::{asset_type}::{file_name}";
+        }
+
+        public IBaseSerializable Create(JSONNode data)
+        {
+            var result =  new PayloadFileDetail
+            {
+                id = data["id"],
+                slug = data["slug"],
+                game = data["game"],
+                campaign = data["campaign"],
+                status = data["status"],
+                asset_type = data["asset_type"],
+                file_name = data["file_name"],
+            };
+            return result;
+        }
+    }
+
     /// <summary>
     /// Data to send to API for setting values
     /// </summary>

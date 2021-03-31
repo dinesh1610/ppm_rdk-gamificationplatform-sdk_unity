@@ -134,6 +134,16 @@ namespace GamificationBackend
             }
             yield return api.GetActivityStatus(session, callback);
         }
+        
+        public IEnumerator GetFilesList(Action<PlatformResponseMany<PayloadFileDetail>> callback)
+        {
+            if (session == null)
+            {
+                Debug.LogWarning("Play session has not been built. Ignoring request");
+                yield break;
+            }
+            yield return api.GetFilesList(session, callback);
+        }
 
         public IEnumerator SetCustomField<T>(string label, T value, UdfType type, Action<PlatformResponseMany<UdfValue>> callback)
         {
