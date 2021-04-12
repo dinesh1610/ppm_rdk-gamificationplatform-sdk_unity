@@ -181,6 +181,7 @@ namespace GamificationBackend
         public int campaign;
         public int status;
         public int asset_type;
+        public int category;
         public string file_name;
         
         public bool check()
@@ -202,6 +203,7 @@ namespace GamificationBackend
                 game = data["game"],
                 campaign = data["campaign"],
                 status = data["status"],
+                category = data["category"],
                 asset_type = data["asset_type"],
                 file_name = data["file_name"],
             };
